@@ -11,12 +11,11 @@ class User(AbstractUser):
     user_type = models.CharField(
         max_length=2,
         choices=UserType.choices,
-        default=UserType.PASSENGER,
     )
     name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=15)  # Better suited for phone numbers
     email = models.EmailField(unique=True)  # Use EmailField for validation
-    is_active = models.BooleanField(default=True)
+    is_enabled = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.username} - {self.get_user_type_display()}"

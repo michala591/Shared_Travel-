@@ -1,22 +1,12 @@
 from django.db import models
 
+from cars.models import Car
 from locations.models import Locations
 from users.models import User
 
-"""
-3.	Trips
-o	Id (PK)
-o	userID (FK - to Driver)
-o	Days
-o	Origin Station (fk location)
-o	Destination Station (fk location) 
-o	Departure Time
-o	Return Time
-"""
-
 
 class Trips(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trips")
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="trips")
     days = models.CharField(max_length=50)
     departure_time = models.TimeField()
     return_time = models.TimeField()
@@ -26,6 +16,13 @@ class Trips(models.Model):
     destination_station = models.ForeignKey(
         Locations, on_delete=models.CASCADE, related_name="trips_destination"
     )
+    users = models.ManyToManyField(User, related_name="trips")
 
     def __str__(self):
-        return f"Trip by {self.user} from {self.origin_station} to {self.destination_station}"
+        return f"Trip by {self.users} from {self.origin_station} to {self.destination_station}"
+
+    def passengers_count(self):
+        return self.users.filter(is_enabled=True).count()
+
+    def has_available_seats(self):
+        return self.passengers_count() < self.car.max_capacity

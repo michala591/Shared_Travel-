@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from users.permissions import IsDriverUser
 from .serializers import locationsSerializer
 from .models import Locations
 
@@ -22,6 +24,7 @@ def get_locations(request):
 
 
 @api_view(["GET", "PUT", "DELETE"])
+@permission_classes([IsAuthenticated, IsDriverUser])
 def location_detail(request, id):
     location = get_object_or_404(Locations, id=id)
 
@@ -39,3 +42,19 @@ def location_detail(request, id):
     elif request.method == "DELETE":
         location.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["GET"])
+def search_locations(request):
+    letter = request.query_params.get("letter", None)
+
+    if letter:
+        locations = Locations.objects.filter(
+            city__startwith=letter
+        ) or Locations.objects.filter(zone__startwith=letter)
+        serializer = locationsSerializer(locations, many=True)
+        return Response(serializer.data)
+
+    return Response(
+        {"detail": "Letter parameter is required."}, status=status.HTTP_400_BAD_REQUEST
+    )

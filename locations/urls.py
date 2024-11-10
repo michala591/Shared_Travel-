@@ -4,4 +4,5 @@ from . import views
 urlpatterns = [
     path("", views.get_locations, name="location"),
     path("<int:id>/", views.location_detail, name="location_detail"),
+    path("search/?", views.search_locations, name="search_locations"),
 ]

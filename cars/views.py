@@ -4,13 +4,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from cars.serializers import CarSerializer
+from users.permissions import IsDriverUser
 from .models import Car
 
 
 @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
 def get_cars(request):
     if request.method == "GET":
+        print("Received request for cars")
         cars = Car.objects.all()
         # cars = Car.objects.filter(user=request.user)
         serializer = CarSerializer(cars, many=True)
@@ -25,6 +26,7 @@ def get_cars(request):
 
 
 @api_view(["GET", "PUT", "DELETE"])
+@permission_classes([IsAuthenticated, IsDriverUser])
 def car_detail(request, id):
     car = get_object_or_404(Car, id=id)
 
