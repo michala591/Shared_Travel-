@@ -5,12 +5,12 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from .serializers import userSerializer
+from .serializers import userSerializer, LoginUserSerializer
 from .models import User
 
 
 @api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+# @permission_classes([IsAdminUser])
 def get_users(request):
     if request.method == "GET":
         users = User.objects.all()
@@ -57,7 +57,7 @@ def register(request):
             name=request.data["name"],
             phone_number=request.data.get("phone_number", ""),  # Optional phone number
         )
-        user.is_active = True
+        user.is_enabled = True
         user.save()
         return Response(
             {"message": "New user created successfully."},
@@ -82,6 +82,14 @@ def login(request):
     return Response(
         {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])  # Ensure user is authenticated
+def get_user_info(request):
+    user = request.user  # Get the authenticated user
+    serializer = LoginUserSerializer(user)
+    return Response(serializer.data)
 
 
 @api_view(["PATCH"])
