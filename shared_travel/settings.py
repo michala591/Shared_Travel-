@@ -111,7 +111,7 @@ DATABASES = {
 
 # DATABASES = {
 #     "default": {
-#         "ENGINE": "postgresql://shared_travel_db_user:bdx0kjznSUwIPtZGNmaVxDsa4mLBxpDF@dpg-csr05fu8ii6s73f22dd0-a.oregon-postgres.render.com/shared_travel_db",
+#         "ENGINE": "django.db.backends.sqlite3",
 #         "NAME": BASE_DIR / "db.sqlite3",
 #     }
 # }
