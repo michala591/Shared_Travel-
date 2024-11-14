@@ -38,16 +38,13 @@ class tripsSerializer(serializers.ModelSerializer):
 
 
 class TripsSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Trips
         fields = ["id"]
 
 
 class UserSerializer(serializers.ModelSerializer):
-    trips = TripsSerializer(
-        many=True, read_only=True
-    )  # List of trips the user is associated with
-
     class Meta:
         model = User
         fields = [

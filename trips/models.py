@@ -6,7 +6,9 @@ from users.models import User
 
 
 class Trips(models.Model):
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="trips")
+    car = models.ForeignKey(
+        Car, on_delete=models.CASCADE, related_name="trips"
+    )
     days = models.CharField(max_length=50)
     departure_time = models.TimeField()
     return_time = models.TimeField()

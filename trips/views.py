@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from cars.models import Car
 from users.models import User
 from users.permissions import IsDriverUser
 from .serializers import (
@@ -26,15 +27,23 @@ def get_trips(request):
 @permission_classes([IsAuthenticated, IsDriverUser])
 def add_trips(request):
     try:
-
+        car = Car.objects.filter(user=request.user).first()
+        car_id = car.id
+        if not car:
+            return Response(
+                {"error": "No car found for the user."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         trip = Trips.objects.create(
-            car_id=request.data["car"],
+            car_id=car_id,
             days=request.data["days"],
             departure_time=request.data["departure_time"],
             return_time=request.data["return_time"],
             origin_station_id=request.data["origin_station"],
             destination_station_id=request.data["destination_station"],
         )
+        trip.users.add(request.user)
+
         if "users" in request.data:
             trip.users.set(request.data["users"])
         trip.save()
