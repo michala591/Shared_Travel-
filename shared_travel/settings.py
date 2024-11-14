@@ -32,9 +32,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*", "127.0.0.1"]
+ALLOWED_HOSTS = ["https://shared-travel1.onrender.com/"]
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5500",  # Allow your frontend to make requests
+    "https://shared-travel1.onrender.com/"  # Allow your frontend to make requests
 ]
 
 # Application definition
@@ -68,11 +68,9 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5500",
-]
+
 CORS_ORIGIN_WHITELIST = [
-    "http://127.0.0.1:5500",
+    "https://shared-travel1.onrender.com/",
 ]
 
 

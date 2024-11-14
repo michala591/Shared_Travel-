@@ -129,19 +129,26 @@ def get_active_trips(request):
 def search_trips(request):
     letter = request.query_params.get("letter", None)
 
-    if letter:
-        trips = Trips.objects.filter(
-            origin_station__city__startswith=letter
-        ) | Trips.objects.filter(origin_station__zone__startswith=letter)
+    if not letter:
+        return Response(
+            {"detail": "Letter parameter is required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-        trips = [trip for trip in trips if trip.has_available_seats()]
+    trips = Trips.objects.filter(
+        origin_station__city__istartswith=letter
+    ) | Trips.objects.filter(origin_station__zone__istartswith=letter)
 
-        serializer = SearchTripsSerializer(trips, many=True)
-        return Response(serializer.data)
+    trips = [trip for trip in trips if trip.has_available_seats()]
 
-    return Response(
-        {"detail": "Letter parameter is required."}, status=status.HTTP_400_BAD_REQUEST
-    )
+    if not trips:
+        return Response(
+            {"detail": "No trips found with available seats."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    serializer = SearchTripsSerializer(trips, many=True)
+    return Response(serializer.data)
 
 
 @api_view(["POST"])
