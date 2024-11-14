@@ -15,7 +15,7 @@ class userSerializer(serializers.ModelSerializer):
 class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
-        fields = "__all__"  # Add more fields as needed
+        fields = ["max_capacity"]  # Add more fields as needed
 
 
 class TripsLocationsSerializer(serializers.ModelSerializer):
@@ -25,13 +25,16 @@ class TripsLocationsSerializer(serializers.ModelSerializer):
 
 
 class tripsSerializer(serializers.ModelSerializer):
-    car = CarSerializer()  # Use the nested Car serializer
     origin_station = TripsLocationsSerializer()
     destination_station = TripsLocationsSerializer()
+    available_seats = serializers.SerializerMethodField()
 
     class Meta:
         model = Trips
         fields = "__all__"
+
+    def get_available_seats(self, obj):
+        return obj.available_seats()
 
 
 class TripsSerializer(serializers.ModelSerializer):
@@ -72,7 +75,6 @@ class SearchTripsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trips
         fields = [
-            "car",
             "days",
             "departure_time",
             "return_time",

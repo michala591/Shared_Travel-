@@ -1,26 +1,50 @@
+from datetime import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from users.models import User
 from users.permissions import IsDriverUser
-from .serializers import SearchTripsSerializer, UserSerializer, tripsSerializer
-from .models import Trips
+from .serializers import (
+    SearchTripsSerializer,
+    UserSerializer,
+    tripsSerializer,
+)
+from .models import FrozenPassenger, Trips
 
 
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 def get_trips(request):
     if request.method == "GET":
         trips = Trips.objects.all()
         serializer = tripsSerializer(trips, many=True)
         return Response(serializer.data)
 
-    elif request.method == "POST":
-        serializer = tripsSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsDriverUser])
+def add_trips(request):
+    try:
+
+        trip = Trips.objects.create(
+            car_id=request.data["car"],
+            days=request.data["days"],
+            departure_time=request.data["departure_time"],
+            return_time=request.data["return_time"],
+            origin_station_id=request.data["origin_station"],
+            destination_station_id=request.data["destination_station"],
+        )
+        if "users" in request.data:
+            trip.users.set(request.data["users"])
+        trip.save()
+
+        return Response(
+            {"message": "Trip added successfully."},
+            status=status.HTTP_201_CREATED,
+        )
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET", "PUT", "DELETE"])
@@ -89,26 +113,69 @@ def search_trips(request):
 @permission_classes([IsAuthenticated])
 def invite_to_trip(request, id):
     trip = get_object_or_404(Trips, id=id)
+
     if request.user in trip.users.all():
         return Response(
             {"error": "You are already part of this trip."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    if Trips.objects.filter(users=request.user):
+    if (
+        Trips.objects.filter(users=request.user).exists()
+        and request.user.user_type == "PA"
+    ):
         return Response(
             {"error": "You are already part of trips."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not trip.has_available_seats():
+    if trip.available_seats() == 0:
         return Response(
             {"error": "No available seats on this trip."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
     trip.users.add(request.user)
     return Response(
         {
-            "status": f"You have been successfully added to the trip from {trip.origin_station} to {trip.destination_station}."
+            "status": f"You have been successfully added to the trip from {trip.origin_station} to {trip.destination_station}.",
+            "available_seats": trip.available_seats(),  # Fixed to return as integer
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_trips(request):
+    trips = Trips.objects.filter(users=request.user)
+    serializer = tripsSerializer(trips, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def freeze_passenger(request, id):
+    trip = get_object_or_404(Trips, id=id)
+
+    # Check if the user is part of the trip
+    if request.user not in trip.users.all():
+        return Response(
+            {"error": "You are not part of this trip."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Freeze the user for one day
+    freeze_until = timezone.now() + timezone.timedelta(days=1)
+
+    # Create a record in FrozenPassenger
+    FrozenPassenger.objects.create(
+        trip=trip, user=request.user, freeze_until=freeze_until
+    )
+
+    return Response(
+        {
+            "status": f"{request.user} has been frozen for 1 day on the trip from {trip.origin_station} to {trip.destination_station}.",
+            "freeze_until": freeze_until,
         },
         status=status.HTTP_200_OK,
     )

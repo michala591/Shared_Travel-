@@ -3,6 +3,6 @@ from . import views
 
 urlpatterns = [
     path("", views.get_locations, name="location"),
-    path("<int:id>/", views.location_detail, name="location_detail"),
+    path("location_id/", views.location_id, name="location_id"),
     path("search/?", views.search_locations, name="search_locations"),
 ]

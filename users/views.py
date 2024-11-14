@@ -10,7 +10,7 @@ from .models import User
 
 
 @api_view(["GET", "POST"])
-# @permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser])
 def get_users(request):
     if request.method == "GET":
         users = User.objects.all()

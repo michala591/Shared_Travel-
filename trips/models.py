@@ -24,5 +24,14 @@ class Trips(models.Model):
     def passengers_count(self):
         return self.users.filter(is_enabled=True).count()
 
-    def has_available_seats(self):
-        return self.passengers_count() < self.car.max_capacity
+    def available_seats(self):
+        return self.car.max_capacity - self.passengers_count()
+
+
+class FrozenPassenger(models.Model):
+    trip = models.ForeignKey(Trips, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    freeze_until = models.DateTimeField()
+
+    def __str__(self):
+        return f"Frozen {self.user} in {self.trip} until {self.freeze_until}"
