@@ -34,7 +34,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ["https://shared-travel1.onrender.com/"]
 CORS_ALLOWED_ORIGINS = [
-    "https://shared-travel1.onrender.com/"  # Allow your frontend to make requests
+    "https://shared-travel1.onrender.com"  # Allow your frontend to make requests
 ]
 
 # Application definition
