@@ -70,12 +70,38 @@ def trip_detail(request, id):
         serializer = tripsSerializer(trip)
         return Response(serializer.data)
 
-    elif request.method == "PUT":
-        serializer = tripsSerializer(trip, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == "PUT":
+        try:
+            car = Car.objects.filter(user=request.user).first()
+            car_id = car.id
+            if not car:
+                return Response(
+                    {"error": "No car found for the user."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            trip.days = request.data.get("days", trip.days)
+            trip.departure_time = request.data.get(
+                "departure_time", trip.departure_time
+            )
+            trip.return_time = request.data.get("return_time", trip.return_time)
+            trip.origin_station_id = request.data.get(
+                "origin_station", trip.origin_station_id
+            )
+            trip.destination_station_id = request.data.get(
+                "destination_station", trip.destination_station_id
+            )
+            trip.car_id = car_id  # Ensure the car remains assigned to the trip
+
+            if "users" in request.data:
+                trip.users.set(request.data["users"])
+            trip.save()
+
+            return Response(
+                {"message": "Trip update successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == "DELETE":
         trip.delete()
