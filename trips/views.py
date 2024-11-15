@@ -187,6 +187,36 @@ def my_trips(request):
     return Response(serializer.data)
 
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Trips
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_trip(request, trip_id):
+    try:
+        trip = Trips.objects.get(id=trip_id)
+
+        if request.user not in trip.users.all():
+            return Response(
+                {"detail": "You are not part of this trip."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        trip.users.remove(request.user)
+
+        return Response(
+            {"detail": "Trip successfully deleted from your list."},
+            status=status.HTTP_204_NO_CONTENT,
+        )
+
+    except Trips.DoesNotExist:
+        return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def freeze_passenger(request, id):
