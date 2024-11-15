@@ -196,9 +196,9 @@ from .models import Trips
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def delete_trip(request, trip_id):
+def delete_trip(request):
     try:
-        trip = Trips.objects.get(id=trip_id)
+        trip = Trips.objects.filter(user=request.user)
 
         if request.user not in trip.users.all():
             return Response(
