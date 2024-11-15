@@ -196,16 +196,19 @@ from .models import Trips
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def delete_trip(request):
+def delete_trip(request, trip_id):
     try:
-        trip = Trips.objects.filter(user=request.user)
+        # Fetch the specific trip by ID
+        trip = Trips.objects.get(id=trip_id)
 
+        # Check if the requesting user is part of the trip
         if request.user not in trip.users.all():
             return Response(
                 {"detail": "You are not part of this trip."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Remove the user from the trip
         trip.users.remove(request.user)
 
         return Response(
