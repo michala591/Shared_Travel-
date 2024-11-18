@@ -13,8 +13,8 @@ from .models import Car
 def car_detail(request):
 
     if request.method == "GET":
-        car = get_object_or_404(Car, user=request.user)
-        serializer = CarSerializer(car)
+        cars = Car.objects.filter(user=request.user)
+        serializer = CarSerializer(cars, many=True)
         return Response(serializer.data)
 
     elif request.method == "POST":

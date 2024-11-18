@@ -148,11 +148,10 @@ def get_active_trips(request):
 def search_trips(request):
     letter = request.query_params.get("letter", None)
     if letter:
-        trips = (
-            Trips.objects.filter(origin_station__city__startswith=letter).values()
-            | Trips.objects.filter(origin_station__zone__startswith=letter).values()
-        )
-        trips = [trip for trip in trips if trip.has_available_seats()]
+        trips = Trips.objects.filter(
+            origin_station__city__istartswith=letter
+        ) | Trips.objects.filter(origin_station__zone__istartswith=letter)
+        trips = [trip for trip in trips if trip.available_seats()]
         serializer = SearchTripsSerializer(trips, many=True)
         return Response(serializer.data)
     return Response(
